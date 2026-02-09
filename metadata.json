@@ -1,0 +1,5 @@
+{
+  "name": "HanziMaster Flashcards",
+  "description": "A Quizlet-style flashcard app for learning Chinese. Features AI-generated decks, stroke order animations via HanziWriter, and comprehensive simplified/traditional character support.",
+  "requestFramePermissions": []
+}
