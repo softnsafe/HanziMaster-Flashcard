@@ -4,10 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HanziMaster Flashcards</title>
+    <!-- Referrer Policy for Google OAuth -->
+    <meta name="referrer" content="origin" />
     <!-- Tailwind CSS (CDN kept for simplicity alongside Vite) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- HanziWriter (CDN kept to match existing usage in components) -->
     <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    
+    <!-- Google API Scripts for Drive Picker -->
+    <script async defer src="https://apis.google.com/js/api.js"></script>
+    <script async defer src="https://accounts.google.com/gsi/client"></script>
+
     <script>
       // Shim process.env for browser compatibility to prevent "process is not defined" crashes
       window.process = window.process || { env: {} };
@@ -67,6 +74,7 @@
       }
     </style>
  
+
 </head>
   <body>
     <div id="root"></div>
