@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import DeckGenerator from './components/DeckGenerator';
 import Flashcard from './components/Flashcard';
 import { Deck } from './types';
-import { ArrowLeft, ArrowRight, RotateCw, Plus, BookOpen, Download } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCw, Plus, BookOpen, Download, Languages } from 'lucide-react';
 
 const App: React.FC = () => {
   const [deck, setDeck] = useState<Deck | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [scriptMode, setScriptMode] = useState<'simplified' | 'traditional'>('simplified');
 
   const handleDeckGenerated = (newDeck: Deck) => {
     setDeck(newDeck);
@@ -20,7 +21,7 @@ const App: React.FC = () => {
     setIsFlipped(false);
     setTimeout(() => {
       setCurrentCardIndex((prev) => (prev + 1) % deck.cards.length);
-    }, 200); // Small delay to allow flip back animation if wanted, but instant is often snappier for UX
+    }, 200);
   };
 
   const handlePrev = () => {
@@ -54,6 +55,10 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const toggleScriptMode = () => {
+    setScriptMode(prev => prev === 'simplified' ? 'traditional' : 'simplified');
+  };
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       {/* Header */}
@@ -66,6 +71,17 @@ const App: React.FC = () => {
             <h1 className="text-lg font-bold text-gray-900 tracking-tight">HanziMaster</h1>
           </div>
           <div className="flex items-center gap-2">
+            
+            {/* Toggle Button */}
+            <button
+              onClick={toggleScriptMode}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors mr-2"
+              title={`Switch to ${scriptMode === 'simplified' ? 'Traditional' : 'Simplified'}`}
+            >
+              <Languages size={14} />
+              <span>{scriptMode === 'simplified' ? '简' : '繁'}</span>
+            </button>
+
             {deck && (
               <>
                 <button 
@@ -104,12 +120,11 @@ const App: React.FC = () => {
         ) : (
           <div className="w-full max-w-5xl flex flex-col items-center h-full justify-center">
             
-            {/* Deck Title & Progress */}
-            <div className="w-full max-w-3xl flex justify-between items-center mb-3 shrink-0">
-               <div>
-                 <h2 className="text-lg font-bold text-gray-800">{deck.title}</h2>
-                 <p className="text-xs text-gray-500">Card {currentCardIndex + 1} of {deck.cards.length}</p>
-               </div>
+            {/* Progress Bar (Title removed) */}
+            <div className="w-full max-w-3xl flex justify-center items-center mb-6 shrink-0 gap-4">
+               <span className="text-xs text-gray-400 font-medium tabular-nums">
+                 {currentCardIndex + 1} / {deck.cards.length}
+               </span>
                <div className="w-32 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                  <div 
                     className="h-full bg-blue-600 transition-all duration-300" 
@@ -124,6 +139,7 @@ const App: React.FC = () => {
                 data={deck.cards[currentCardIndex]} 
                 isFlipped={isFlipped} 
                 onFlip={handleFlip} 
+                scriptMode={scriptMode}
               />
             </div>
 

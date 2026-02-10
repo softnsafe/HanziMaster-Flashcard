@@ -20,12 +20,13 @@
         background-color: #f3f4f6;
       }
 
+      /* Updated to use KaiTi / BiauKai (標楷體) as requested */
       .hanzi-sc {
-        font-family: 'Noto Sans SC', sans-serif;
+        font-family: "KaiTi", "STKaiti", "楷体", "BiauKai", "標楷體", "Noto Sans SC", sans-serif;
       }
       
       .hanzi-tc {
-        font-family: 'Noto Serif TC', serif;
+        font-family: "BiauKai", "標楷體", "KaiTi", "STKaiti", "楷体", "Noto Serif TC", serif;
       }
 
       /* 3D Flip Effects */
@@ -64,21 +65,6 @@
       .animate-pop-in {
         animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
       }
-
-      @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-8px); }
-        100% { transform: translateY(0px); }
-      }
-      
-      .animate-float {
-        animation: float 4s ease-in-out infinite;
-      }
-
-      .delay-100 { animation-delay: 100ms; }
-      .delay-200 { animation-delay: 200ms; }
-      .delay-300 { animation-delay: 300ms; }
-      .delay-500 { animation-delay: 500ms; }
     </style>
  
 </head>

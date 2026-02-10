@@ -1,7 +1,15 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Deck, FlashcardData } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+// Lazy load AI instance
+const getAI = () => {
+  if (!aiInstance) {
+    aiInstance = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  }
+  return aiInstance;
+};
 
 const RESPONSE_SCHEMA = {
   type: Type.OBJECT,
@@ -21,11 +29,12 @@ const RESPONSE_SCHEMA = {
             items: {
               type: Type.OBJECT,
               properties: {
-                chinese: { type: Type.STRING },
+                simplified: { type: Type.STRING, description: "Example sentence in Simplified Chinese" },
+                traditional: { type: Type.STRING, description: "Example sentence in Traditional Chinese" },
                 pinyin: { type: Type.STRING, description: "Pinyin for the example sentence" },
                 english: { type: Type.STRING }
               },
-              required: ["chinese", "pinyin", "english"]
+              required: ["simplified", "traditional", "pinyin", "english"]
             }
           }
         },
@@ -43,10 +52,14 @@ For each word, provide:
 2. Traditional Chinese characters.
 3. Pinyin with tone marks for the word.
 4. English definition.
-5. Two example sentences. For EACH example, provide:
-   - The Chinese sentence.
-   - The Pinyin for the sentence.
-   - The English translation.
+5. Example sentences:
+   - If the user provided a specific phrase or sentence for the word, use ONLY that phrase. Do NOT generate additional examples.
+   - If the user provided only the word, generate 2 natural, relevant example sentences.
+   - For EACH example, provide:
+     - The sentence in Simplified Chinese.
+     - The sentence in Traditional Chinese.
+     - The Pinyin.
+     - The English translation.
 
 Ensure the examples are natural and relevant to the context.`;
 
@@ -55,6 +68,7 @@ export const generateDeck = async (topic: string): Promise<Deck> => {
   const prompt = `Generate a list of 10-15 vocabulary words related to the topic: "${topic}".`;
 
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model,
       contents: prompt,
@@ -85,13 +99,14 @@ export const generateDeckFromList = async (content: string): Promise<Deck> => {
   Instructions:
   1. Parse the input. Each line represents a card. 
   2. The line might be just a word (e.g., "苹果") or a word with an example (e.g., "苹果: 我爱吃苹果").
-  3. If an example is provided by the user, you MUST use it EXACTLY as the first example sentence. Do NOT modify the Chinese characters of the user's example. Provide Pinyin and an English translation for it.
+  3. If an example is provided by the user, you MUST use it EXACTLY as the example sentence. Do NOT generate any other examples for this card. Do NOT modify the Chinese characters of the user's example. Provide Pinyin and an English translation for it.
   4. If the input is English, translate it to Chinese and treat it as the target word.
-  5. Provide all missing fields (Traditional, Pinyin for word, Pinyin for examples, Definition, Additional Examples if needed).
+  5. Provide all missing fields (Traditional, Pinyin for word, Pinyin for examples, Definition).
   6. Set the deck title based on the content (e.g., "Custom Vocabulary List").
   `;
 
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model,
       contents: prompt,

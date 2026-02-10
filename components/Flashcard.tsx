@@ -1,126 +1,118 @@
 import React from 'react';
 import { FlashcardData } from '../types';
 import HanziWriterPlayer from './HanziWriterPlayer';
-import { Volume2 } from 'lucide-react';
 
 interface FlashcardProps {
   data: FlashcardData;
   isFlipped: boolean;
   onFlip: () => void;
+  scriptMode: 'simplified' | 'traditional';
 }
 
-const Flashcard: React.FC<FlashcardProps> = ({ data, isFlipped, onFlip }) => {
+const Flashcard: React.FC<FlashcardProps> = ({ data, isFlipped, onFlip, scriptMode }) => {
   
-  const handleAudio = (e: React.MouseEvent, text: string) => {
-    e.stopPropagation();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
-    window.speechSynthesis.speak(utterance);
-  };
+  // Determine which character set is "Primary" (Front) and "Secondary" (Back)
+  const isSimplified = scriptMode === 'simplified';
+  
+  const mainChar = isSimplified ? data.simplified : data.traditional;
+  const secondaryChar = isSimplified ? data.traditional : data.simplified;
+  const secondaryLabel = isSimplified ? "Traditional" : "Simplified";
+  
+  // Font classes based on script
+  const mainFontClass = isSimplified ? "hanzi-sc" : "hanzi-tc";
+  const secondaryFontClass = isSimplified ? "hanzi-tc" : "hanzi-sc";
 
   return (
     <div 
-      key={data.id} // Forces re-mount on card change for clean state
-      className="relative w-full max-w-3xl h-[65vh] min-h-[500px] max-h-[850px] cursor-pointer perspective-1000 mx-auto group select-none"
+      key={`${data.id}-${scriptMode}`} // Force remount when script mode changes to reset animations/state
+      className="relative w-full max-w-4xl h-[60vh] min-h-[500px] max-h-[800px] cursor-pointer perspective-1000 mx-auto group select-none"
       onClick={onFlip}
     >
       <div 
-        className={`w-full h-full transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) transform-style-3d relative shadow-xl rounded-2xl transition-all ${isFlipped ? 'rotate-y-180' : ''}`}
+        className={`w-full h-full transition-transform duration-500 cubic-bezier(0.2, 0.8, 0.2, 1) transform-style-3d relative shadow-lg hover:shadow-xl rounded-xl transition-all ${isFlipped ? 'rotate-y-180' : ''}`}
       >
-        {/* FRONT SIDE */}
+        {/* FRONT SIDE (Main Character + Examples) */}
         <div 
-          className={`absolute w-full h-full backface-hidden bg-white rounded-2xl flex flex-col p-6 border border-gray-200 overflow-hidden bg-gradient-to-br from-white to-gray-50 ${isFlipped ? 'pointer-events-none' : ''}`}
+          className={`absolute w-full h-full backface-hidden bg-white rounded-xl flex flex-col items-center justify-between p-6 md:p-8 border-b-4 border-gray-200 ${isFlipped ? 'pointer-events-none' : ''}`}
         >
-          
-          {/* Top Right: Traditional */}
-          <div className="absolute top-6 right-6 z-10">
-            <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-3 shadow-sm text-center min-w-[80px]">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider block mb-1">Traditional</span>
-                <span className="text-5xl hanzi-tc text-gray-700 font-serif leading-none">{data.traditional}</span>
-            </div>
+          {/* Top Right Corner Box: Alternate Script */}
+          <div className="absolute top-4 right-4 md:top-6 md:right-6 z-10">
+             <div className="flex flex-col items-center px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{secondaryLabel}</span>
+                <span className={`text-2xl md:text-3xl ${secondaryFontClass} text-gray-700 leading-none`}>
+                  {secondaryChar}
+                </span>
+             </div>
           </div>
 
-          {/* Center: Simplified */}
-          <div className="flex-grow flex flex-col justify-center items-center -mt-4">
-            <div className="flex flex-col items-center">
-              <h1 className="text-8xl md:text-9xl hanzi-sc font-bold text-gray-900 mb-4 leading-none filter drop-shadow-sm">{data.simplified}</h1>
-              <button 
-                onClick={(e) => handleAudio(e, data.simplified)}
-                className="p-3 rounded-full bg-white shadow-sm border border-gray-100 text-gray-500 hover:text-blue-600 hover:scale-110 active:scale-95 transition-all duration-300 group/audio cursor-pointer pointer-events-auto"
-                title="Listen"
-              >
-                <Volume2 size={28} className="group-hover/audio:animate-pulse" />
-              </button>
-            </div>
+          {/* Main Content: HUGE Character */}
+          <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0">
+            <h1 className={`text-[8rem] md:text-[14rem] lg:text-[16rem] ${mainFontClass} font-normal text-gray-900 leading-none`}>
+              {mainChar}
+            </h1>
           </div>
 
-          {/* Bottom: Examples (Centered) */}
-          <div className="mt-auto pt-4 border-t border-gray-100 text-center">
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Example Usage</p>
-            <div className="space-y-2">
-              {data.examples.slice(0, 2).map((ex, idx) => (
-                <div key={idx} className="transition-colors hover:bg-gray-50 rounded-lg p-1">
-                    {ex.pinyin && <p className="text-lg text-gray-500 mb-0.5 font-[Inter]">{ex.pinyin}</p>}
-                    <p className="text-2xl hanzi-sc text-gray-700 leading-snug">
-                      {ex.chinese}
+          {/* Bottom: Examples (Context) - Row Layout */}
+          <div className="w-full flex flex-col items-center mb-2">
+            <div className="flex flex-row gap-6 md:gap-12 justify-center items-center text-center w-full px-4">
+               {data.examples && data.examples.slice(0, 2).map((ex, idx) => (
+                  <div key={idx} className="shrink-0 max-w-[45%]">
+                    <p className={`text-xl md:text-3xl ${mainFontClass} text-gray-600`}>
+                      {isSimplified ? ex.simplified : ex.traditional}
                     </p>
-                </div>
-              ))}
+                  </div>
+               ))}
             </div>
+            <p className="mt-6 text-gray-300 font-medium tracking-widest text-xs uppercase">Tap to flip</p>
           </div>
         </div>
 
-        {/* BACK SIDE */}
+        {/* BACK SIDE (Details + Secondary Character) */}
         <div 
-          className={`absolute w-full h-full backface-hidden bg-white rounded-2xl rotate-y-180 flex flex-col p-6 border border-gray-200 overflow-y-auto bg-gradient-to-bl from-white to-blue-50/30 ${!isFlipped ? 'pointer-events-none' : ''}`}
+          className={`absolute w-full h-full backface-hidden bg-white rounded-xl rotate-y-180 flex flex-col border-b-4 border-blue-200 overflow-hidden ${!isFlipped ? 'pointer-events-none' : ''}`}
         >
-          
-          {/* Top Right: Traditional (Added to match front) */}
-          <div className="absolute top-6 right-6 z-10">
-            <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-3 shadow-sm text-center min-w-[80px]">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider block mb-1">Traditional</span>
-                <span className="text-5xl hanzi-tc text-gray-700 font-serif leading-none">{data.traditional}</span>
-            </div>
+          {/* Header Bar */}
+          <div className="h-16 border-b border-gray-100 flex items-center justify-between px-6 bg-gray-50/50">
+             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Definition</span>
           </div>
 
-          {/* Center Content: Pinyin + Stroke Order */}
-          <div className="flex-grow flex flex-col justify-center items-center shrink-0">
+          <div className="flex-grow flex flex-col md:flex-row p-6 gap-6 overflow-y-auto">
             
-            {/* Pinyin on top of words */}
-            <div className="flex items-center gap-2 mb-2">
-               <h2 className="text-5xl font-medium text-blue-600 tracking-wide font-[Inter]">{data.pinyin}</h2>
-               <button 
-                  onClick={(e) => handleAudio(e, data.simplified)}
-                  className="p-2 rounded-full hover:bg-blue-50 text-blue-400 transition-colors hover:scale-110 active:scale-95 cursor-pointer pointer-events-auto"
-                >
-                  <Volume2 size={28} />
-               </button>
+            {/* Left Side: Characters & Pinyin */}
+            <div className="flex-1 flex flex-col items-center justify-center border-r border-gray-100 pr-6">
+               <p className="text-3xl text-blue-600 font-medium mb-4 font-[Inter]">{data.pinyin}</p>
+               
+               {/* Stroke Order (Using Main Character) */}
+               <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  {isFlipped && <HanziWriterPlayer text={mainChar} size={220} />}
+               </div>
+
+               {/* Secondary Display */}
+               <div className="text-center">
+                 <span className="text-xs text-gray-400 uppercase tracking-wide block mb-1">{secondaryLabel}</span>
+                 <span className={`text-4xl ${secondaryFontClass} text-gray-600 font-serif`}>{secondaryChar}</span>
+               </div>
             </div>
 
-            {/* Stroke Order Box */}
-            <div className="py-4 px-8 bg-white rounded-2xl mb-4 border border-blue-100 shadow-sm">
-              {/* Conditional rendering to only load HanziWriter when flipped to save resources/prevent bugs */}
-              {isFlipped && <HanziWriterPlayer text={data.simplified} size={120} />}
+            {/* Right Side: English & Examples */}
+            <div className="flex-[1.5] flex flex-col justify-center text-left">
+              <h3 className="text-3xl font-semibold text-gray-800 mb-8">{data.english}</h3>
+              
+              <div className="space-y-4">
+                <p className="text-xs text-gray-400 uppercase tracking-wide font-bold">Examples</p>
+                {data.examples.map((ex, idx) => (
+                  <div key={idx} className="pl-4 border-l-2 border-blue-100 hover:border-blue-300 transition-colors">
+                    <p className={`text-xl ${mainFontClass} text-gray-700 mb-1`}>
+                      {isSimplified ? ex.simplified : ex.traditional}
+                    </p>
+                    {ex.pinyin && <p className="text-sm text-gray-500 mb-0.5">{ex.pinyin}</p>}
+                    <p className="text-sm text-gray-600 italic">{ex.english}</p>
+                  </div>
+                ))}
+              </div>
             </div>
+
           </div>
-
-          {/* Bottom: English & Detailed Examples (Centered) */}
-          <div className="mt-auto">
-            <div className="mb-4 text-center border-b border-gray-100 pb-4">
-               <h3 className="text-xl font-semibold text-gray-800">{data.english}</h3>
-            </div>
-
-            <div className="space-y-3">
-              {data.examples.map((ex, idx) => (
-                <div key={idx} className={`bg-white/80 p-3 rounded-lg border border-gray-100 text-center shadow-sm hover:shadow-md transition-shadow`}>
-                  {ex.pinyin && <p className="text-base text-gray-500 mb-0.5 font-[Inter]">{ex.pinyin}</p>}
-                  <p className="text-xl hanzi-sc text-gray-800 mb-1 leading-snug">{ex.chinese}</p>
-                  <p className="text-sm text-gray-600 italic">{ex.english}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
       </div>
     </div>

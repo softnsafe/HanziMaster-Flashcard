@@ -16,7 +16,7 @@ const DeckGenerator: React.FC<DeckGeneratorProps> = ({ onDeckGenerated }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isValidDeck = (data: any): data is Deck => {
+  const isValidDeck = (data: any): boolean => {
     return (
       typeof data === 'object' &&
       data !== null &&
@@ -30,10 +30,22 @@ const DeckGenerator: React.FC<DeckGeneratorProps> = ({ onDeckGenerated }) => {
       const json = JSON.parse(content);
 
       if (isValidDeck(json)) {
-        const cards = json.cards.map((c: any, i: number) => ({
-          ...c,
-          id: c.id || `imported-${Date.now()}-${i}`
-        }));
+        // Map old data format if necessary
+        const cards = json.cards.map((c: any, i: number) => {
+          const examples = c.examples?.map((ex: any) => ({
+            simplified: ex.simplified || ex.chinese || "", // fallback for old 'chinese' field
+            traditional: ex.traditional || ex.chinese || "", // fallback to simplified if traditional missing in old data
+            pinyin: ex.pinyin,
+            english: ex.english
+          })) || [];
+
+          return {
+            ...c,
+            examples,
+            id: c.id || `imported-${Date.now()}-${i}`
+          };
+        });
+        
         onDeckGenerated({ ...json, cards });
         return true;
       } else if (Array.isArray(json) && json.every(item => typeof item === 'string')) {
@@ -233,7 +245,7 @@ const DeckGenerator: React.FC<DeckGeneratorProps> = ({ onDeckGenerated }) => {
                 id="input"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder={"Enter words one per line. \nExample:\n苹果: 我想吃苹果 (Apple: I want to eat apples)\n你好: 你好吗？"}
+                placeholder={"Enter words one per line. \nExample:\n你好: 你好吗？ (Hello: How are you?)"}
                 rows={6}
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-gray-400 resize-none"
                 disabled={isLoading}

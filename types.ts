@@ -1,5 +1,6 @@
 export interface Example {
-  chinese: string;
+  simplified: string;
+  traditional: string;
   pinyin?: string;
   english: string;
 }
